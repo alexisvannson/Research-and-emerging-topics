@@ -5,3 +5,4 @@ mistralai==0.0.3
 streamlit
 PyPDF2
 requests
+os
