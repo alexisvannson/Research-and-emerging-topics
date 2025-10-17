@@ -68,7 +68,7 @@ At minimum, the plant‑level CSV should include:
 
 **Optional company aggregates (`company_level_agg.csv`)**: provide columns like `Owner`, `centroid_lat`, `centroid_lon`, and `total_capacity`. If not provided, the app computes aggregates and a simple environmental score from plant‑level fields (e.g., `ISO 14001`, `ISO 50001`, `ResponsibleSteel Certification`) when available.
 
-## 🗺 Maps & Styling
+##  Maps & Styling
 
 - Maps use **OpenStreetMap** styles via Plotly, so **no Mapbox token** is required.
 - The heatmap uses a default radius and centers on the median of visible points; tune these in `dashboard.py` if desired.
