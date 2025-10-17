@@ -1,4 +1,5 @@
-# Plant Capacity Dashboard
+# Authors : Millan Das, Arthur de Leusse & Alexis Vannson
+ # Plant Capacity Dashboard
 
 A Streamlit application to explore global iron & steel plant data with interactive maps, KPIs, and rich filtering. The app supports plant‑level and company‑level views, plus a data table and CSV export.
 
