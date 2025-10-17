@@ -1,85 +1,106 @@
 # Authors : Millan Das, Arthur de Leusse & Alexis Vannson
- # Plant Capacity Dashboard
+#  Plant Capacity Dashboard (Streamlit + Plotly)
 
-A Streamlit application to explore global iron & steel plant data with interactive maps, KPIs, and rich filtering. The app supports plant‑level and company‑level views, plus a data table and CSV export.
+Interactive dashboard to explore **global iron & steel plant data**.  
+Filter by company, region, country and capacity; visualize plants as **points**, a **density heatmap**, or **company aggregates**; view KPIs and export filtered data. Optionally render a companion **Jupyter notebook** inside the app.
 
-## Features
+---
 
-- **Sidebar filters**: filter by Company, Region, Country, and **Capacity range**.
-- **KPIs**: total plants, total capacity (ttpa), number of companies & regions.
-- **Interactive maps (tabs)**  
-  - **Points**: plant markers; optional size by a chosen capacity metric.  
-  - **Heatmap**: capacity-weighted density map (uses *Total capacity (ttpa)* when available).  
-  - **Companies**: bubbles at capacity‑weighted company centroids; sized by total capacity and colored by an environmental score (when inputs available).
-- **Coordinates parsing**: derives `lat`/`lon` automatically from `lat/lon`, `Latitude/Longitude`, or a single `Coordinates` field like `"36.75, 6.24"`.
-- **Capacity handling**: computes **Total capacity (ttpa)** by summing present capacity columns if not already provided.
-- **Data table** of filtered rows and **Download filtered CSV** button.
-- **Notebook integration (optional)**: render a Jupyter notebook in a “Notebook” tab if you enable it (requires `nbformat`).
+##  Features
 
-##  Repo Contents
+- **Rich filtering** (sidebar): Company, Region, Country, **Capacity metric & range**.
+- **KPIs**: total plants, total capacity (ttpa), number of companies, number of regions.
+- **Interactive maps** (tabs):
+  - **Points** — markers per plant; optional size by capacity; color by Region/Company/Country.
+  - **Heatmap** — capacity‑weighted density (uses *Total capacity (ttpa)* when available).
+  - **Companies** — bubbles at capacity‑weighted **company centroids**; size = total capacity; color = simple environmental score (mean of available ISO flags).
+- **Automatic coordinates parsing**: uses existing `lat/lon`, or `Latitude/Longitude`, or parses a `"Coordinates"` field like `"36.75, 6.24"`.
+- **Capacity handling**: computes **Total capacity (ttpa)** by summing present capacity columns if not provided.
+- **Data table** for the filtered subset + **CSV export**.
+- **Notebook tab (optional)**: render a `.ipynb` (markdown, code cells collapsed, outputs incl. Plotly).
+
+---
+
+##  Repository Layout
 
 ```
 .
 ├── dashboard.py                 # Streamlit app
-├── cleaned_plant.csv            # Example plant-level dataset (required at runtime or upload via UI)
-├── company_level_agg.csv        # Optional company-level aggregates (centroids, totals)
-├── lab_1_Arthur.ipynb           # Notebook with analyses (optional)
-└── Plant-level-data-Global-Iron-and-Steel-Tracker-September-2025-V1.xlsx  # Source data (optional)
+├── requirements.txt             # Project dependencies
+├── cleaned_plant.csv            # Example plant-level dataset (optional at runtime)
+├── company_level_agg.csv        # Optional: company aggregates (centroids & totals)
+├── lab_1.ipynb           # Optional: analysis notebook to render in-app
+└── Plant-level-data-Global-Iron-and-Steel-Tracker-September-2025-V1.xlsx  # Optional source data
 ```
 
-> You can also upload CSV files directly from the app’s sidebar if you prefer not to place them in the repo root.
+> You can load data via the app’s sidebar (Upload CSV) if you don’t keep CSVs in the repo root.
 
-##  Installation
+---
 
-> **Python**: 3.9+ recommended
+##  Quickstart
+
+**Python 3.9+** recommended.
 
 ```bash
-# (Optional) create and activate a virtual environment
+# 1) (Optional) create and activate a virtual env
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
 # macOS/Linux
 source .venv/bin/activate
 
-# Install dependencies
-pip install streamlit pandas numpy plotly nbformat
-```
+# 2) Install deps
+pip install -r requirements.txt
 
-> `nbformat` is only needed if you plan to render a Jupyter notebook inside the app.
-
-##  Run
-
-From the repository root:
-
-```bash
+# 3) Run the app
 streamlit run dashboard.py
 ```
 
-By default the app looks for `cleaned_plant.csv` (and optional `company_level_agg.csv`) in the project root. If they’re not found, use the **Upload CSV** option in the sidebar.
+By default the app looks for `cleaned_plant.csv` (and optionally `company_level_agg.csv`) in the project root. If not found, choose **Upload CSV** in the sidebar.
+
+> Maps use **OpenStreetMap** via Plotly — **no Mapbox token** required.
+
+---
 
 ##  Data Expectations
 
-At minimum, the plant‑level CSV should include:
+**Minimum** for plant‑level CSV (“cleaned_plant.csv”):
 
-- **Location**: either `lat` and `lon`; or `Latitude` and `Longitude`; or a **single** `Coordinates` column with `"lat, lon"`.
+- **Location**: either `lat` & `lon`, or `Latitude` & `Longitude`, **or** a single `Coordinates` column with `"lat, lon"`.
 - **Categoricals** (recommended): `Owner` or `Parent GEM ID`, `Region`, `Country/Area`.
-- **Capacity columns** (any subset):  
-  `Nominal crude steel capacity (ttpa)`, `Ferronickel capacity (ttpa)`, `Pelletizing plant capacity (ttpa)`, `Sinter plant capacity (ttpa)`, `Coking plant capacity (ttpa)`, or a generic `Capacity`.
-  - The app will coerce to numeric and compute **Total capacity (ttpa)** as the row‑wise sum of available capacity columns.
+- **Capacity columns** (any subset):
+  - `Nominal crude steel capacity (ttpa)`
+  - `Ferronickel capacity (ttpa)`
+  - `Pelletizing plant capacity (ttpa)`
+  - `Sinter plant capacity (ttpa)`
+  - `Coking plant capacity (ttpa)`
+  - or a generic `Capacity`
+- The app will coerce these to numeric and compute **`Total capacity (ttpa)`** = row‑wise sum of present capacity columns.
 
-**Optional company aggregates (`company_level_agg.csv`)**: provide columns like `Owner`, `centroid_lat`, `centroid_lon`, and `total_capacity`. If not provided, the app computes aggregates and a simple environmental score from plant‑level fields (e.g., `ISO 14001`, `ISO 50001`, `ResponsibleSteel Certification`) when available.
+**Optional company aggregates** (“company_level_agg.csv”):
+- `Owner`, `centroid_lat`, `centroid_lon`, `total_capacity` (and optionally `avg_iso14001`, `avg_iso50001`, `avg_responsible`).  
+- If not provided, the app **computes aggregates on the fly** from plant‑level data, including capacity‑weighted centroids.
 
-##  Maps & Styling
+---
 
-- Maps use **OpenStreetMap** styles via Plotly, so **no Mapbox token** is required.
-- The heatmap uses a default radius and centers on the median of visible points; tune these in `dashboard.py` if desired.
+##  How to Use
+
+1. **Data Source (sidebar)**: choose *Default path* or *Upload CSV* for plants (and optionally aggregates).
+2. **Filters (sidebar)**: select Company/Region/Country; pick **Capacity metric** and set a **range**.
+3. **KPIs**: sanity‑check counts and totals for the current filter.
+4. **Maps**:
+   - **Points**: explore plant locations; hover for details; size by selected capacity metric.
+   - **Heatmap**: visualize density; weighted by Total capacity (if available).
+   - **Companies**: see firm footprints; size by total capacity; color by environmental score.
+5. **Data Table**: preview the filtered rows and **Download filtered CSV**.
+
+---
 
 ##  Notebook Tab (Optional)
 
-If you enable the Notebook tab in the code, the app can display a `.ipynb` file (default path `lab_1_Arthur.ipynb`) including markdown, code (collapsed), and outputs (text/HTML/Plotly). Install `nbformat` to enable:
+The **Notebook** tab renders a `.ipynb` (default path: `lab_1_Arthur.ipynb`) including markdown, code cells (collapsed), and outputs (text/HTML/Plotly).  
+Install `nbformat` (already in `requirements.txt`). You can also upload a notebook via the tab.
 
-```bash
-pip install nbformat
-```
+> Want to **execute** the notebook inside the app? Add `nbclient` and we can wire a “Run notebook” button.
 
-> You can upload a notebook from the UI as well.
+---
