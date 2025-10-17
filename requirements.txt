@@ -1,0 +1,11 @@
+# Core requirements
+streamlit>=1.36.0
+pandas>=2.2.2
+numpy>=1.26.0
+plotly>=5.24.0
+nbformat>=5.10.0  # needed to render notebooks in the Notebook tab
+
+# Optional (uncomment if needed)
+# pyarrow>=16.0.0   # faster IO / parquet support
+# openpyxl>=3.1.2   # if you plan to read Excel files
+# nbclient>=0.10.0  # to execute notebooks inside the app (not just render)
