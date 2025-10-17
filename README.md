@@ -95,12 +95,3 @@ By default the app looks for `cleaned_plant.csv` (and optionally `company_level_
 5. **Data Table**: preview the filtered rows and **Download filtered CSV**.
 
 ---
-
-##  Notebook Tab (Optional)
-
-The **Notebook** tab renders a `.ipynb` (default path: `lab_1.ipynb`) including markdown, code cells (collapsed), and outputs (text/HTML/Plotly).  
-Install `nbformat` (already in `requirements.txt`). You can also upload a notebook via the tab.
-
-> Want to **execute** the notebook inside the app? Add `nbclient` and we can wire a “Run notebook” button.
-
----
