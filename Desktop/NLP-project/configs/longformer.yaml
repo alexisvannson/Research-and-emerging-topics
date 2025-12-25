@@ -1,0 +1,63 @@
+model:
+  name: "longformer_summarizer"
+  type: "abstractive"
+
+longformer:
+  model_name: "allenai/led-large-16384"  # Longformer Encoder Decoder
+  max_input_length: 16384
+  max_output_length: 1024
+  attention_window: [512, 512, 512, 512, 512, 512]
+
+  # Sparse attention configuration
+  global_attention_indices: "auto"  # auto, first_sentence, keywords
+  num_global_attention_tokens: 64
+
+  # Generation parameters
+  num_beams: 4
+  length_penalty: 2.0
+  no_repeat_ngram_size: 3
+  early_stopping: true
+
+training:
+  batch_size: 1
+  learning_rate: 3e-5
+  num_epochs: 4
+  warmup_steps: 500
+  gradient_accumulation_steps: 16
+  max_grad_norm: 0.1
+  weight_decay: 0.01
+  fp16: true
+  gradient_checkpointing: true
+
+data:
+  datasets: ["arxiv", "pubmed", "booksum", "billsum"]
+  min_source_length: 5000
+  max_source_length: 16000
+  max_target_length: 1024
+  train_samples: 10000
+  val_samples: 1000
+  test_samples: 1000
+
+evaluation:
+  metrics: ["rouge", "bertscore", "faithfulness", "coverage"]
+  rouge_types: ["rouge1", "rouge2", "rougeL", "rougeLsum"]
+  bertscore_model: "microsoft/deberta-xlarge-mnli"
+  analyze_attention: true
+
+ablation:
+  remove_global_attention: false
+  reduce_attention_window: false
+  compare_to_sliding_window: true
+
+memory_optimization:
+  use_8bit: false
+  gradient_checkpointing: true
+  cpu_offload: false
+
+logging:
+  wandb_project: "long-doc-summarization"
+  log_interval: 50
+  save_interval: 500
+  log_attention_weights: true
+
+seed: 42

@@ -1,0 +1,67 @@
+model:
+  name: "hierarchical_transformer"
+  type: "abstractive"
+
+hierarchical:
+  # Paragraph-level encoder
+  paragraph_encoder:
+    model_name: "bert-base-uncased"
+    max_length: 512
+    hidden_size: 768
+    num_layers: 6
+    num_attention_heads: 12
+
+  # Document-level encoder
+  document_encoder:
+    hidden_size: 768
+    num_layers: 4
+    num_attention_heads: 8
+    max_paragraphs: 32
+
+  # Decoder
+  decoder:
+    model_name: "facebook/bart-large"
+    max_length: 512
+    num_beams: 4
+    length_penalty: 2.0
+    early_stopping: true
+
+  # Segmentation
+  paragraph_split_method: "sliding_window"  # sliding_window, sentence_based, section_based
+  overlap_sentences: 2
+
+training:
+  batch_size: 2
+  learning_rate: 2e-5
+  num_epochs: 5
+  warmup_steps: 1000
+  gradient_accumulation_steps: 8
+  max_grad_norm: 1.0
+  weight_decay: 0.01
+  fp16: true
+
+data:
+  datasets: ["arxiv", "pubmed", "booksum"]
+  min_source_length: 5000
+  max_source_length: 15000
+  max_target_length: 512
+  train_samples: 5000
+  val_samples: 500
+  test_samples: 500
+
+evaluation:
+  metrics: ["rouge", "bertscore", "faithfulness", "coverage", "redundancy"]
+  rouge_types: ["rouge1", "rouge2", "rougeL"]
+  bertscore_model: "microsoft/deberta-xlarge-mnli"
+
+ablation:
+  remove_paragraph_encoder: false
+  remove_document_encoder: false
+  single_level_baseline: false
+
+logging:
+  wandb_project: "long-doc-summarization"
+  log_interval: 50
+  save_interval: 500
+
+seed: 42

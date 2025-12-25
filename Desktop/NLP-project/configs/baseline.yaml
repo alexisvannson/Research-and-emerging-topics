@@ -1,0 +1,48 @@
+model:
+  name: "baseline"
+  type: "extractive"  # or "abstractive"
+
+extractive:
+  method: "textrank"  # textrank, lexrank
+  num_sentences: 5
+  similarity_threshold: 0.1
+  damping_factor: 0.85
+
+abstractive:
+  model_name: "facebook/bart-large-cnn"
+  max_input_length: 1024
+  max_output_length: 256
+  min_output_length: 50
+  chunk_size: 1024
+  chunk_overlap: 128
+  aggregation_method: "concat"  # concat, summary_of_summaries
+
+training:
+  skip_fine_tuning: true 
+  batch_size: 4
+  learning_rate: 3e-5
+  num_epochs: 3
+  warmup_steps: 500
+  gradient_accumulation_steps: 4
+  max_grad_norm: 1.0
+  weight_decay: 0.01
+
+data:
+  datasets: ["arxiv"]
+  train_samples: 10000
+  val_samples: 1000
+  test_samples: 1000
+  max_source_length: 1024
+  max_target_length: 256
+
+evaluation:
+  metrics: ["rouge", "bertscore", "faithfulness"]
+  rouge_types: ["rouge1", "rouge2", "rougeL"]
+  bertscore_model: "microsoft/deberta-xlarge-mnli"
+
+logging:
+  wandb_project: "long-doc-summarization"
+  log_interval: 100
+  save_interval: 1000
+
+seed: 42
