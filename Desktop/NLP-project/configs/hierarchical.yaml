@@ -31,6 +31,7 @@ hierarchical:
   overlap_sentences: 2
 
 training:
+  skip_fine_tuning: false  # Set to true to use pretrained models without fine-tuning
   batch_size: 2
   learning_rate: 2e-5
   num_epochs: 5

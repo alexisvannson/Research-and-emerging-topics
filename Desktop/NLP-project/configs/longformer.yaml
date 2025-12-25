@@ -19,6 +19,7 @@ longformer:
   early_stopping: true
 
 training:
+  skip_fine_tuning: false  # Set to true to use pretrained models without fine-tuning
   batch_size: 1
   learning_rate: 3e-5
   num_epochs: 4
