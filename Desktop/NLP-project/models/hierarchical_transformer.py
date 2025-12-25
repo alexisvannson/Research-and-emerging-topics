@@ -187,6 +187,133 @@ class HierarchicalTransformerSummarizer:
         self.decoder.to(self.device)
         self.decoder.eval()
 
+    def detect_sections(self, text: str) -> List[dict]:
+        """Detect document sections with headers.
+
+        Args:
+            text: Input document
+
+        Returns:
+            List of section dictionaries with 'title' and 'content'
+        """
+        import re
+
+        sections = []
+        lines = text.split('\n')
+
+        # Patterns for section headers
+        patterns = [
+            (r'^#{1,6}\s+(.+)$', 'markdown'),           # Markdown headers: # Title
+            (r'^([A-Z][A-Z\s]{2,}):?\s*$', 'caps'),      # ALL CAPS HEADERS
+            (r'^(\d+\.?\s+[A-Z][^.!?]*?)$', 'numbered'), # 1. Introduction
+            (r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*):?\s*$', 'title_case'),  # Title Case:
+        ]
+
+        current_section = {
+            'title': 'Document',
+            'content': [],
+            'start_line': 0,
+            'type': 'default'
+        }
+
+        for i, line in enumerate(lines):
+            line_stripped = line.strip()
+
+            if not line_stripped:
+                if current_section['content']:
+                    current_section['content'].append('')
+                continue
+
+            # Check if this line is a section header
+            is_header = False
+            for pattern, header_type in patterns:
+                match = re.match(pattern, line_stripped)
+                if match:
+                    # Save previous section if it has content
+                    if current_section['content']:
+                        current_section['content'] = '\n'.join(current_section['content']).strip()
+                        if current_section['content']:
+                            sections.append(current_section)
+
+                    # Start new section
+                    title = match.group(1).strip()
+                    # Clean up markdown symbols
+                    title = re.sub(r'^#+\s*', '', title)
+                    title = re.sub(r'^\d+\.?\s*', '', title)
+
+                    current_section = {
+                        'title': title,
+                        'content': [],
+                        'start_line': i,
+                        'type': header_type
+                    }
+                    is_header = True
+                    break
+
+            if not is_header:
+                current_section['content'].append(line)
+
+        # Add last section
+        if current_section['content']:
+            current_section['content'] = '\n'.join(current_section['content']).strip()
+            if current_section['content']:
+                sections.append(current_section)
+
+        # If no sections detected, return whole document as one section
+        if not sections:
+            sections = [{
+                'title': 'Document',
+                'content': text,
+                'start_line': 0,
+                'type': 'default'
+            }]
+
+        return sections
+
+    def get_section_importance(self, section_title: str) -> float:
+        """Get importance weight for a section based on its title.
+
+        Args:
+            section_title: Section title
+
+        Returns:
+            Importance weight (higher = more important)
+        """
+        section_title_lower = section_title.lower()
+
+        # High importance sections
+        high_importance = [
+            'abstract', 'introduction', 'conclusion', 'summary',
+            'results', 'findings', 'discussion', 'executive summary'
+        ]
+
+        # Medium importance sections
+        medium_importance = [
+            'methods', 'methodology', 'approach', 'background',
+            'related work', 'literature review', 'analysis'
+        ]
+
+        # Low importance sections
+        low_importance = [
+            'references', 'bibliography', 'appendix', 'acknowledgments',
+            'supplementary', 'funding', 'acknowledgements'
+        ]
+
+        for keyword in high_importance:
+            if keyword in section_title_lower:
+                return 1.5
+
+        for keyword in medium_importance:
+            if keyword in section_title_lower:
+                return 1.0
+
+        for keyword in low_importance:
+            if keyword in section_title_lower:
+                return 0.3
+
+        # Default importance
+        return 1.0
+
     def split_into_paragraphs(self, text: str) -> List[str]:
         """Split text into paragraphs.
 
@@ -229,6 +356,83 @@ class HierarchicalTransformerSummarizer:
                 paragraphs.append(" ".join(current_para))
 
         return paragraphs
+
+    def summarize_with_sections(self, text: str, use_importance: bool = True) -> str:
+        """Generate summary using section-aware hierarchical approach.
+
+        Args:
+            text: Input document
+            use_importance: Whether to weight sections by importance
+
+        Returns:
+            Summary text
+        """
+        # Detect sections
+        sections = self.detect_sections(text)
+
+        if len(sections) <= 1:
+            # No sections detected, fall back to regular summarization
+            return self.summarize(text)
+
+        # Generate summary for each important section
+        section_summaries = []
+
+        for section in sections:
+            importance = self.get_section_importance(section['title'])
+
+            # Skip very low importance sections
+            if importance < 0.5:
+                continue
+
+            # Split section into paragraphs
+            paragraphs = self.split_into_paragraphs(section['content'])
+
+            if not paragraphs:
+                continue
+
+            # Encode section hierarchically
+            with torch.no_grad():
+                doc_encoding, para_encodings = self.encoder(paragraphs, self.device)
+
+            # Create prompt with section context
+            section_prompt = f"Summarize the {section['title']} section: " + \
+                           " ".join(paragraphs[:min(2, len(paragraphs))])
+
+            # Tokenize
+            decoder_inputs = self.decoder_tokenizer(
+                section_prompt,
+                max_length=512,
+                truncation=True,
+                return_tensors="pt",
+            )
+            decoder_inputs = {k: v.to(self.device) for k, v in decoder_inputs.items()}
+
+            # Generate section summary
+            with torch.no_grad():
+                summary_ids = self.decoder.generate(
+                    decoder_inputs["input_ids"],
+                    max_length=min(150, self.max_output_length // len(sections)),
+                    num_beams=self.num_beams,
+                    length_penalty=2.0,
+                    early_stopping=True,
+                )
+
+            section_summary = self.decoder_tokenizer.decode(
+                summary_ids[0], skip_special_tokens=True
+            )
+
+            # Weight by importance if requested
+            if use_importance and importance > 1.0:
+                section_summaries.append(f"[{section['title']}] {section_summary}")
+            else:
+                section_summaries.append(section_summary)
+
+        # Combine section summaries
+        if section_summaries:
+            return " ".join(section_summaries)
+        else:
+            # Fallback to regular summarization
+            return self.summarize(text)
 
     def summarize(self, text: str) -> str:
         """Generate summary using hierarchical approach.
