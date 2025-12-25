@@ -154,6 +154,7 @@ def get_dataset_statistics(dataset_path: Path) -> Dict[str, any]:
     return stats
 
 
+
 def main() -> None:
     """Main function to download all datasets."""
     # Set up paths
@@ -166,16 +167,7 @@ def main() -> None:
     # Download datasets (using smaller samples for testing)
     # For full training, set num_samples=None
 
-    datasets_to_download = {
-        "arxiv": download_arxiv,
-        # "pubmed": download_pubmed,
-        # "multi_news": download_multi_news,
-        # "booksum": download_booksum,
-        "billsum": download_billsum,
-        # "cnn_dailymail": download_cnn_dailymail,
-    }
-
-    for dataset_name, download_func in datasets_to_download.items():
+    for dataset_name, download_func in DATASETS_TO_DOWNLOAD.items():
         try:
             print(f"\n{'=' * 80}")
             download_func(output_dir, num_samples=1000)  # Download 1000 samples each
@@ -196,4 +188,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    DATASETS_TO_DOWNLOAD = {
+    "arxiv": download_arxiv,
+    "billsum": download_billsum,
+    # "pubmed": download_pubmed,
+    # "multi_news": download_multi_news,
+    # "booksum": download_booksum,
+    # "cnn_dailymail": download_cnn_dailymail,
+    }
     main()
