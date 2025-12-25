@@ -234,9 +234,8 @@ def print_model_summary(model: torch.nn.Module, input_size: Optional[tuple] = No
         model: Model to summarize
         input_size: Optional input size for shape inference
     """
-     
+
     print("Model Summary")
-     
 
     print("\nArchitecture:")
     print(model)
@@ -245,8 +244,6 @@ def print_model_summary(model: torch.nn.Module, input_size: Optional[tuple] = No
     params = count_parameters(model)
     for key, value in params.items():
         print(f"  {key}: {value:,}")
-
-     
 
 
 def main():

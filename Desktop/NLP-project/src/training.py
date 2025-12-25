@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import os
 from pathlib import Path
 from typing import Dict
 
@@ -190,9 +189,9 @@ def train_model(config: Dict, output_dir: Path):
             optimizer,
             scheduler,
             device,
-            gradient_accumulation_steps=int(config["training"].get(
-                "gradient_accumulation_steps", 1
-            )),
+            gradient_accumulation_steps=int(
+                config["training"].get("gradient_accumulation_steps", 1)
+            ),
             max_grad_norm=float(config["training"].get("max_grad_norm", 1.0)),
         )
 

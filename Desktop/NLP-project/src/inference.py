@@ -1,11 +1,7 @@
 """Inference utilities for summarization models."""
 
 import time
-from pathlib import Path
-from typing import Dict, List, Optional
-
-import torch
-from transformers import AutoTokenizer
+from typing import Any, Dict, List, Optional
 
 from models.baseline_abstractive import BARTChunkSummarizer
 from models.baseline_extractive import LexRankSummarizer, TextRankSummarizer
@@ -53,7 +49,7 @@ class SummarizationInference:
         else:
             raise ValueError(f"Unknown model type: {self.model_type}")
 
-    def summarize(self, text: str, return_metrics: bool = False) -> Dict[str, any]:
+    def summarize(self, text: str, return_metrics: bool = False) -> Dict[str, Any]:
         """Generate summary with optional metrics.
 
         Args:
@@ -144,7 +140,7 @@ def main():
 
     # Test TextRank
     print("Testing TextRank Inference:")
-     
+
     inference = SummarizationInference("textrank", {"extractive": {"num_sentences": 2}})
     result = inference.summarize(test_text, return_metrics=True)
     print(f"Summary: {result['summary']}")

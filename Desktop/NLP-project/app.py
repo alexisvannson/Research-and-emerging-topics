@@ -2,7 +2,7 @@
 
 import time
 from io import BytesIO
-from typing import Dict, Optional
+from typing import Dict
 
 import plotly.graph_objects as go
 import PyPDF2
@@ -13,7 +13,6 @@ from models.baseline_abstractive import BARTChunkSummarizer
 from models.baseline_extractive import LexRankSummarizer, TextRankSummarizer
 from models.sliding_window import SlidingWindowSummarizer
 from src.faithfulness_checker import FaithfulnessChecker
-from src.inference import SummarizationInference
 
 # Page configuration
 st.set_page_config(
@@ -97,11 +96,9 @@ def highlight_text(text: str, summary: str) -> str:
     import nltk
 
     try:
-        sentences = nltk.sent_tokenize(text)
         summary_sentences = nltk.sent_tokenize(summary)
     except LookupError:
         nltk.download("punkt")
-        sentences = nltk.sent_tokenize(text)
         summary_sentences = nltk.sent_tokenize(summary)
 
     # Simple matching (could be improved)
@@ -177,11 +174,11 @@ def main():
     st.sidebar.subheader("Parameters")
 
     if "Extractive" in model_name:
-        num_sentences = st.sidebar.slider(
+        st.sidebar.slider(
             "Number of sentences to extract", min_value=3, max_value=10, value=5
         )
     else:
-        max_length = st.sidebar.slider(
+        st.sidebar.slider(
             "Maximum summary length (words)",
             min_value=50,
             max_value=500,
@@ -197,7 +194,11 @@ def main():
     # Input method selection in columns
     input_cols = st.columns([1, 1, 1, 2])
     with input_cols[0]:
-        input_method = st.selectbox("Input method:", ["Paste Text", "Upload File", "Example"], label_visibility="collapsed")
+        input_method = st.selectbox(
+            "Input method:",
+            ["Paste Text", "Upload File", "Example"],
+            label_visibility="collapsed",
+        )
 
     input_text = ""
 
@@ -229,44 +230,62 @@ def main():
     else:  # Example
         input_text = (
             """
-            The field of natural language processing (NLP) has undergone a remarkable transformation in recent years,
-            driven primarily by the advent of transformer-based architectures and large-scale pre-training. This
-            revolution began with the introduction of the Transformer architecture in 2017 by Vaswani et al. in their
-            seminal paper "Attention is All You Need." The key innovation was the self-attention mechanism, which
-            allows the model to weigh the importance of different words in a sequence when processing each word,
-            eliminating the need for recurrence and enabling better parallelization.
+            The field of natural language processing (NLP) has undergone a
+            remarkable transformation in recent years, driven primarily by the
+            advent of transformer-based architectures and large-scale
+            pre-training. This revolution began with the introduction of the
+            Transformer architecture in 2017 by Vaswani et al. in their seminal
+            paper "Attention is All You Need." The key innovation was the
+            self-attention mechanism, which allows the model to weigh the
+            importance of different words in a sequence when processing each
+            word, eliminating the need for recurrence and enabling better
+            parallelization.
 
-            Following this breakthrough, we witnessed the development of BERT (Bidirectional Encoder Representations
-            from Transformers) by Google in 2018. BERT used a masked language modeling objective to pre-train deep
-            bidirectional representations, achieving state-of-the-art results across multiple NLP benchmarks. Around
-            the same time, OpenAI introduced GPT (Generative Pre-trained Transformer), which used autoregressive
-            language modeling and demonstrated impressive text generation capabilities.
+            Following this breakthrough, we witnessed the development of BERT
+            (Bidirectional Encoder Representations from Transformers) by Google
+            in 2018. BERT used a masked language modeling objective to
+            pre-train deep bidirectional representations, achieving
+            state-of-the-art results across multiple NLP benchmarks. Around the
+            same time, OpenAI introduced GPT (Generative Pre-trained
+            Transformer), which used autoregressive language modeling and
+            demonstrated impressive text generation capabilities.
 
-            The success of these models sparked an explosion of research in transfer learning for NLP. Models like
-            RoBERTa, ALBERT, and ELECTRA built upon BERT's foundation, introducing various improvements. Meanwhile,
-            the GPT series evolved through GPT-2 and GPT-3, with the latter containing 175 billion parameters and
-            demonstrating remarkable few-shot learning capabilities.
+            The success of these models sparked an explosion of research in
+            transfer learning for NLP. Models like RoBERTa, ALBERT, and ELECTRA
+            built upon BERT's foundation, introducing various improvements.
+            Meanwhile, the GPT series evolved through GPT-2 and GPT-3, with the
+            latter containing 175 billion parameters and demonstrating
+            remarkable few-shot learning capabilities.
 
-            However, standard transformers face a significant limitation: their quadratic complexity with respect to
-            sequence length. This makes them computationally expensive for long documents. To address this, researchers
-            developed efficient transformer variants. Longformer introduced sparse attention patterns, allowing it to
-            process sequences up to 16,384 tokens. BigBird combined random attention, window attention, and global
-            attention to achieve similar efficiency gains.
+            However, standard transformers face a significant limitation: their
+            quadratic complexity with respect to sequence length. This makes
+            them computationally expensive for long documents. To address this,
+            researchers developed efficient transformer variants. Longformer
+            introduced sparse attention patterns, allowing it to process
+            sequences up to 16,384 tokens. BigBird combined random attention,
+            window attention, and global attention to achieve similar
+            efficiency gains.
 
-            In the domain of summarization specifically, models like BART and PEGASUS were introduced. BART combines
-            a bidirectional encoder with an autoregressive decoder, making it particularly effective for generation
-            tasks. PEGASUS was specifically pre-trained for summarization using a gap-sentence generation objective.
+            In the domain of summarization specifically, models like BART and
+            PEGASUS were introduced. BART combines a bidirectional encoder with
+            an autoregressive decoder, making it particularly effective for
+            generation tasks. PEGASUS was specifically pre-trained for
+            summarization using a gap-sentence generation objective.
 
-            The application of these models to long document summarization remains challenging. Various approaches have
-            been proposed, including hierarchical methods that encode paragraphs separately before combining them,
-            sliding window techniques that process overlapping chunks, and extract-then-abstract pipelines that first
+            The application of these models to long document summarization
+            remains challenging. Various approaches have been proposed,
+            including hierarchical methods that encode paragraphs separately
+            before combining them, sliding window techniques that process
+            overlapping chunks, and extract-then-abstract pipelines that first
             select important content before generating summaries.
 
-            Recent work has also focused on evaluation metrics for summarization. While ROUGE scores remain standard,
-            researchers have developed additional metrics like BERTScore for semantic similarity and faithfulness
-            metrics to detect hallucinations. The field continues to evolve rapidly, with new models and techniques
-            emerging regularly, pushing the boundaries of what's possible in natural language understanding and
-            generation.
+            Recent work has also focused on evaluation metrics for
+            summarization. While ROUGE scores remain standard, researchers have
+            developed additional metrics like BERTScore for semantic similarity
+            and faithfulness metrics to detect hallucinations. The field
+            continues to evolve rapidly, with new models and techniques
+            emerging regularly, pushing the boundaries of what's possible in
+            natural language understanding and generation.
             """
             * 3
         )  # Repeat to make it longer
@@ -319,12 +338,20 @@ def main():
                     st.success("Summary generated successfully!")
 
                     # Use tabs for different views
-                    tab1, tab2, tab3 = st.tabs(["📋 Summary", "🔍 Faithfulness Analysis", "💡 Highlighted Source"])
+                    tab1, tab2, tab3 = st.tabs(
+                        [
+                            "📋 Summary",
+                            "🔍 Faithfulness Analysis",
+                            "💡 Highlighted Source",
+                        ]
+                    )
 
                     with tab1:
                         st.markdown("### Generated Summary")
                         st.write(summary)
-                        st.caption(f"Summary length: {summary_words} words | Type: {model_name.split()[0]}")
+                        st.caption(
+                            f"Summary length: {summary_words} words | Type: {model_name.split()[0]}"
+                        )
 
                     with tab2:
                         if show_faithfulness:
@@ -357,19 +384,25 @@ def main():
                                                 f"**Score: {h['score']:.2f}** - {h['sentence']}"
                                             )
                                     else:
-                                        st.success("No potential hallucinations detected!")
+                                        st.success(
+                                            "No potential hallucinations detected!"
+                                        )
 
                                 except Exception as e:
                                     st.warning(f"Could not check faithfulness: {e}")
                         else:
-                            st.info("Faithfulness checking is disabled. Enable it in the sidebar.")
+                            st.info(
+                                "Faithfulness checking is disabled. Enable it in the sidebar."
+                            )
 
                     with tab3:
                         if show_highlights:
                             highlighted = highlight_text(input_text, summary)
                             st.markdown(highlighted, unsafe_allow_html=True)
                         else:
-                            st.info("Highlighting is disabled. Enable it in the sidebar.")
+                            st.info(
+                                "Highlighting is disabled. Enable it in the sidebar."
+                            )
 
                 except Exception as e:
                     st.error(f"Error generating summary: {e}")

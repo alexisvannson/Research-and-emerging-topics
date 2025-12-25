@@ -161,20 +161,18 @@ def main() -> None:
     output_dir = project_root / "data" / "raw"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-     
     print("Long Document Summarization - Dataset Download")
-     
 
     # Download datasets (using smaller samples for testing)
     # For full training, set num_samples=None
-    
+
     datasets_to_download = {
         "arxiv": download_arxiv,
-        #"pubmed": download_pubmed,
-        #"multi_news": download_multi_news,
-        #"booksum": download_booksum,
+        # "pubmed": download_pubmed,
+        # "multi_news": download_multi_news,
+        # "booksum": download_booksum,
         "billsum": download_billsum,
-        #"cnn_dailymail": download_cnn_dailymail,
+        # "cnn_dailymail": download_cnn_dailymail,
     }
 
     for dataset_name, download_func in datasets_to_download.items():
@@ -195,7 +193,6 @@ def main() -> None:
 
     print("Dataset download complete!")
     print(f"Datasets saved to: {output_dir}")
-     
 
 
 if __name__ == "__main__":

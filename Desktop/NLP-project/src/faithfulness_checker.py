@@ -168,7 +168,6 @@ def main():
     """
 
     print("Testing Faithfulness Checker:")
-     
 
     checker = FaithfulnessChecker()
 

@@ -2,9 +2,7 @@
 
 import argparse
 import json
-import time
-from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from bert_score import score as bert_score
@@ -15,7 +13,7 @@ from tqdm import tqdm
 class RougeEvaluator:
     """ROUGE metric evaluator."""
 
-    def __init__(self, rouge_types: List[str] = None):
+    def __init__(self, rouge_types: Optional[List[str]] = None):
         """Initialize ROUGE evaluator.
 
         Args:
@@ -37,7 +35,7 @@ class RougeEvaluator:
         Returns:
             Dictionary of ROUGE scores
         """
-        scores = {
+        scores: Dict[str, Dict[str, List[float]]] = {
             rt: {"precision": [], "recall": [], "fmeasure": []}
             for rt in self.rouge_types
         }
@@ -308,7 +306,7 @@ class RedundancyEvaluator:
 class ComprehensiveEvaluator:
     """Comprehensive evaluator combining all metrics."""
 
-    def __init__(self, metrics: List[str] = None):
+    def __init__(self, metrics: Optional[List[str]] = None):
         """Initialize comprehensive evaluator.
 
         Args:
@@ -318,7 +316,7 @@ class ComprehensiveEvaluator:
             metrics = ["rouge", "bertscore", "coverage", "redundancy"]
 
         self.metrics = metrics
-        self.evaluators = {}
+        self.evaluators: Dict[str, Any] = {}
 
         if "rouge" in metrics:
             self.evaluators["rouge"] = RougeEvaluator()
@@ -335,7 +333,7 @@ class ComprehensiveEvaluator:
         self,
         predictions: List[str],
         references: List[str],
-        sources: List[str] = None,
+        sources: Optional[List[str]] = None,
     ) -> Dict:
         """Run comprehensive evaluation.
 
@@ -422,9 +420,9 @@ def main():
     results = evaluator.evaluate(predictions, references, sources)
 
     # Print results
-    print("\n" + " 
+    print("\n" + "=" * 50)
     print("Evaluation Results")
-     
+    print("=" * 50)
     for metric, value in results.items():
         print(
             f"{metric:30s}: {value:.4f}"

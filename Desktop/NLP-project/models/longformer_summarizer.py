@@ -299,7 +299,7 @@ def main():
     )  # Repeat to make it longer
 
     print("Testing Longformer Summarizer:")
-     
+
     print(f"Input length: {len(test_text.split())} words")
 
     try:

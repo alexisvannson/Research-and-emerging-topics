@@ -239,9 +239,7 @@ def main() -> None:
     processed_dir = project_root / "data" / "processed"
     processed_dir.mkdir(parents=True, exist_ok=True)
 
-     
     print("Long Document Summarization - Data Preprocessing")
-     
 
     # Download NLTK data if needed
     try:
@@ -261,7 +259,6 @@ def main() -> None:
 
     print("Preprocessing complete!")
     print(f"Processed data saved to: {processed_dir}")
-     
 
 
 if __name__ == "__main__":

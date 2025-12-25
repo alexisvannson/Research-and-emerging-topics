@@ -5,7 +5,7 @@ Encodes documents in two stages:
 2. Document-level encoding combining paragraph representations
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import nltk
 import torch
@@ -110,14 +110,14 @@ class HierarchicalEncoder(nn.Module):
         num_paragraphs = len(paragraphs)
 
         # Encode each paragraph
-        paragraph_encodings = []
+        paragraph_encodings_list: List[torch.Tensor] = []
         for paragraph in paragraphs:
             encoding = self.encode_paragraph(paragraph, device)
-            paragraph_encodings.append(encoding)
+            paragraph_encodings_list.append(encoding)
 
         # Stack paragraph encodings
         paragraph_encodings = torch.stack(
-            paragraph_encodings
+            paragraph_encodings_list
         )  # (num_para, hidden_size)
 
         # Add position embeddings
@@ -212,7 +212,7 @@ class HierarchicalTransformerSummarizer:
 
             # Group sentences into pseudo-paragraphs
             paragraphs = []
-            current_para = []
+            current_para: List[str] = []
             current_length = 0
 
             for sent in sentences:
@@ -248,12 +248,6 @@ class HierarchicalTransformerSummarizer:
         # Encode document hierarchically
         with torch.no_grad():
             doc_encoding, para_encodings = self.encoder(paragraphs, self.device)
-
-        # Create input for decoder from document encoding
-        # We'll concatenate the paragraph representations as input
-        encoder_hidden_states = para_encodings.unsqueeze(
-            0
-        )  # (1, num_para, hidden_size)
 
         # For BART decoder, we need to create appropriate inputs
         # We'll use the mean of paragraph encodings as a simple approach
@@ -310,7 +304,7 @@ def main():
     """
 
     print("Testing Hierarchical Transformer Summarizer:")
-     
+
     try:
         summarizer = HierarchicalTransformerSummarizer()
         summary = summarizer.summarize(test_text)

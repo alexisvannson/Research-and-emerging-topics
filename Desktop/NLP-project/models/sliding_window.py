@@ -278,7 +278,6 @@ def main():
     )  # Repeat to make it longer
 
     print("Testing Sliding Window Summarizer:")
-     
 
     try:
         summarizer = SlidingWindowSummarizer(aggregation_method="hierarchical")

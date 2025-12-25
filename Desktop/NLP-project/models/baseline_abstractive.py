@@ -275,7 +275,7 @@ def main():
     """
 
     print("Testing BART Chunk Summarizer:")
-     
+
     try:
         bart = BARTChunkSummarizer()
         summary = bart.summarize(test_text)

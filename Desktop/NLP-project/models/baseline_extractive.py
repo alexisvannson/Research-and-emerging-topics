@@ -1,7 +1,6 @@
 """Extractive summarization baselines: TextRank and LexRank."""
 
-import re
-from typing import List, Tuple
+from typing import List, Optional
 
 import networkx as nx
 import nltk
@@ -100,7 +99,7 @@ class TextRankSummarizer:
 
         return graph
 
-    def summarize(self, text: str, num_sentences: int = None) -> str:
+    def summarize(self, text: str, num_sentences: Optional[int] = None) -> str:
         """Generate extractive summary using TextRank.
 
         Args:
@@ -261,7 +260,7 @@ class LexRankSummarizer:
 
         return vector
 
-    def summarize(self, text: str, num_sentences: int = None) -> str:
+    def summarize(self, text: str, num_sentences: Optional[int] = None) -> str:
         """Generate extractive summary using LexRank.
 
         Args:
@@ -326,13 +325,13 @@ def main():
     """
 
     print("Testing TextRank Summarizer:")
-     
+
     textrank = TextRankSummarizer(num_sentences=3)
     summary = textrank.summarize(test_text)
     print(summary)
 
     print("\n\nTesting LexRank Summarizer:")
-     
+
     lexrank = LexRankSummarizer(num_sentences=3)
     summary = lexrank.summarize(test_text)
     print(summary)
