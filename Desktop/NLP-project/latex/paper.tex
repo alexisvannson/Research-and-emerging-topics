@@ -56,15 +56,7 @@ The exponential growth of digital content has created an urgent need for effecti
 
 \subsection{Contributions}
 
-This work makes the following contributions:
-
-\begin{itemize}
-    \item A comprehensive implementation and evaluation of six distinct approaches to long document summarization, spanning extractive, abstractive, hierarchical, and sparse attention methods.
-    \item Detailed architectural analysis of hierarchical transformers that encode documents at paragraph and document levels, enabling structured understanding of long texts.
-    \item Extensive evaluation on four diverse datasets (215K arXiv papers, 133K PubMed articles, 12K book chapters, 23K legislative bills) using multiple metrics including ROUGE, BERTScore, and faithfulness checking.
-    \item Ablation studies demonstrating the impact of key design choices including paragraph segmentation, attention patterns, and aggregation strategies.
-    \item A production-quality implementation with comprehensive testing, continuous integration, and an interactive demonstration application.
-\end{itemize}
+This work provides a comprehensive implementation and evaluation of six distinct approaches to long document summarization, spanning extractive, abstractive, hierarchical, and sparse attention methods. We present detailed architectural analysis of hierarchical transformers that encode documents at paragraph and document levels, enabling structured understanding of long texts. Our extensive evaluation covers four diverse datasets (215K arXiv papers, 133K PubMed articles, 12K book chapters, 23K legislative bills) using multiple metrics including ROUGE, BERTScore, and faithfulness checking. Through ablation studies, we demonstrate the impact of key design choices including paragraph segmentation, attention patterns, and aggregation strategies. Finally, we deliver a production-quality implementation with comprehensive testing, continuous integration, and an interactive demonstration application.
 
 \subsection{Problem Formulation}
 
@@ -74,35 +66,11 @@ Given a long document $D = \{s_1, s_2, ..., s_n\}$ consisting of $n$ sentences w
 S = f(D; \theta)
 \end{equation}
 
-where $f$ is the summarization function parameterized by $\theta$, and $S$ satisfies:
-\begin{itemize}
-    \item $|S| \ll |D|$ (compression)
-    \item $S$ captures the salient information from $D$ (informativeness)
-    \item $S$ is factually consistent with $D$ (faithfulness)
-    \item $S$ is coherent and fluent (quality)
-\end{itemize}
+where $f$ is the summarization function parameterized by $\theta$, and $S$ must satisfy four key constraints: compression ($|S| \ll |D|$), informativeness ($S$ captures the salient information from $D$), faithfulness ($S$ is factually consistent with $D$), and quality ($S$ is coherent and fluent).
 
 \section{Related Work}
 
-\subsection{Extractive Summarization}
-
-Extractive methods select important sentences from the source document without modification. Graph-based approaches like TextRank \citep{mihalcea2004textrank} and LexRank \citep{erkan2004lexrank} apply PageRank-style algorithms to sentence similarity graphs. These methods are fast and preserve factual accuracy but cannot perform compression or paraphrasing.
-
-\subsection{Abstractive Summarization}
-
-Neural abstractive summarization gained prominence with sequence-to-sequence models \citep{rush2015neural}. The introduction of pre-trained models like BART \citep{lewis2019bart} and PEGASUS \citep{zhang2020pegasus} significantly improved performance on standard benchmarks. However, these models are typically limited to 1024 input tokens.
-
-\subsection{Hierarchical Models}
-
-Hierarchical approaches encode documents at multiple levels of granularity. \citet{cohan2018discourse} introduced a discourse-aware model for scientific papers, while \citet{xiao2019extractive} proposed hierarchical transformers for extractive summarization. These methods better capture document structure but add architectural complexity.
-
-\subsection{Sparse Attention Mechanisms}
-
-Recent work addresses the quadratic complexity of attention through sparse patterns. Longformer \citep{beltagy2020longformer} combines local windowed attention with task-specific global attention, enabling processing of sequences up to 16,384 tokens. BigBird \citep{zaheer2020big} uses random attention alongside local and global patterns. The Longformer Encoder-Decoder (LED) adapts these principles for generation tasks.
-
-\subsection{Document Chunking Approaches}
-
-Practical approaches split long documents into chunks processed independently. \citet{zhang2019pretraining} explored hierarchical transfer learning with chunk-level and document-level models. However, naive chunking loses cross-chunk context and may produce redundant or incoherent summaries.
+The landscape of long document summarization encompasses several complementary approaches. Extractive methods select important sentences from the source document without modification, with graph-based approaches like TextRank \citep{mihalcea2004textrank} and LexRank \citep{erkan2004lexrank} applying PageRank-style algorithms to sentence similarity graphs---these methods are fast and preserve factual accuracy but cannot perform compression or paraphrasing. Neural abstractive summarization gained prominence with sequence-to-sequence models \citep{rush2015neural}, and the introduction of pre-trained models like BART \citep{lewis2019bart} and PEGASUS \citep{zhang2020pegasus} significantly improved performance on standard benchmarks, though these models are typically limited to 1024 input tokens. To address this limitation, hierarchical approaches encode documents at multiple levels of granularity, with \citet{cohan2018discourse} introducing a discourse-aware model for scientific papers and \citet{xiao2019extractive} proposing hierarchical transformers for extractive summarization---these methods better capture document structure but add architectural complexity. More recent work addresses the quadratic complexity of attention through sparse patterns: Longformer \citep{beltagy2020longformer} combines local windowed attention with task-specific global attention enabling processing of sequences up to 16,384 tokens, while BigBird \citep{zaheer2020big} uses random attention alongside local and global patterns. The Longformer Encoder-Decoder (LED) adapts these principles for generation tasks. In parallel, practical chunking approaches split long documents into independently processed segments, with \citet{zhang2019pretraining} exploring hierarchical transfer learning with chunk-level and document-level models, though naive chunking loses cross-chunk context and may produce redundant or incoherent summaries.
 
 \section{Methodology}
 
@@ -149,16 +117,7 @@ We use BART-large-CNN \citep{lewis2019bart}, a 400M parameter model pre-trained 
 C_k = \{w_{k \cdot (L - O)}, ..., w_{k \cdot (L - O) + L}\}
 \end{equation}
 
-where $L=1024$ is chunk size and $O=128$ is overlap. Each chunk $C_k$ is summarized independently, then summaries are concatenated or recursively summarized.
-
-Configuration parameters:
-\begin{itemize}
-    \item Max input length: 1024 tokens
-    \item Max output length: 256 tokens
-    \item Chunk overlap: 128 tokens
-    \item Beam search: 4 beams
-    \item Length penalty: 2.0
-\end{itemize}
+where $L=1024$ is chunk size and $O=128$ is overlap. Each chunk $C_k$ is summarized independently, then summaries are concatenated or recursively summarized. We configure the model with maximum input length of 1024 tokens, maximum output length of 256 tokens, chunk overlap of 128 tokens, beam search with 4 beams, and a length penalty of 2.0.
 
 \subsection{Advanced Architectures}
 
@@ -172,14 +131,7 @@ Our hierarchical model uses two-level encoding:
 h_i^{para} = \text{BERT}(p_i)[0]
 \end{equation}
 
-where $[0]$ denotes the [CLS] token representation. Configuration:
-\begin{itemize}
-    \item Encoder: BERT-base-uncased (110M parameters)
-    \item Max paragraph length: 512 tokens
-    \item Hidden size: 768
-    \item Layers: 6 transformer layers
-    \item Attention heads: 12
-\end{itemize}
+where $[0]$ denotes the [CLS] token representation. We employ BERT-base-uncased with 110M parameters, maximum paragraph length of 512 tokens, hidden size of 768, 6 transformer layers, and 12 attention heads.
 
 \textbf{Level 2 - Document Encoding:} Paragraph representations are encoded with position embeddings:
 
@@ -193,13 +145,7 @@ where $K \leq 32$ is the number of paragraphs. A document-level transformer proc
 H^{doc} = \text{TransformerEncoder}(H^{para})
 \end{equation}
 
-Configuration:
-\begin{itemize}
-    \item Layers: 4 transformer layers
-    \item Attention heads: 8
-    \item Feed-forward dimension: 3072
-    \item Max paragraphs: 32
-\end{itemize}
+The document-level encoder uses 4 transformer layers with 8 attention heads, feed-forward dimension of 3072, and supports up to 32 paragraphs.
 
 \textbf{Decoder:} BART-large decoder generates the summary conditioned on document encoding:
 
@@ -207,12 +153,7 @@ Configuration:
 S = \text{BART-Decoder}(H^{doc})
 \end{equation}
 
-\textbf{Paragraph Segmentation:} We implement three strategies:
-\begin{enumerate}
-    \item Natural paragraphs (double newline delimiters)
-    \item Sentence-based pseudo-paragraphs (100 words each)
-    \item Sliding window with 2-sentence overlap
-\end{enumerate}
+\textbf{Paragraph Segmentation:} We implement three segmentation strategies: natural paragraphs delimited by double newlines, sentence-based pseudo-paragraphs of 100 words each, and a sliding window approach with 2-sentence overlap.
 
 \subsubsection{Longformer Encoder-Decoder (LED)}
 
@@ -232,15 +173,7 @@ where $w=512$ is the window size.
 \text{GlobalAttention}(Q, K, V)_i = \text{softmax}\left(\frac{Q_i K^T}{\sqrt{d_k}}\right) V
 \end{equation}
 
-Configuration (allenai/led-large-16384):
-\begin{itemize}
-    \item Max input length: 16,384 tokens
-    \item Max output length: 1,024 tokens
-    \item Attention window: [512, 512, 512, 512, 512, 512]
-    \item Global attention tokens: 64 (auto-selected)
-    \item Parameters: 406M
-    \item Generation: 4 beams, no-repeat-ngram-size=3
-\end{itemize}
+We use the allenai/led-large-16384 configuration with maximum input length of 16,384 tokens, maximum output length of 1,024 tokens, attention window of 512 across all layers, 64 auto-selected global attention tokens, 406M parameters, and generation using 4 beams with no-repeat-ngram-size of 3.
 
 \subsubsection{Sliding Window}
 
@@ -250,12 +183,7 @@ The sliding window approach processes documents in overlapping windows:
 W_k = \{w_{k \cdot stride}, ..., w_{k \cdot stride + window\_size}\}
 \end{equation}
 
-Each window is summarized, then aggregated using:
-\begin{itemize}
-    \item Concatenation with deduplication
-    \item Summary-of-summaries (recursive)
-    \item Weighted combination based on content overlap
-\end{itemize}
+Each window is summarized independently, then aggregated using three methods: concatenation with deduplication, recursive summary-of-summaries, or weighted combination based on content overlap.
 
 \section{Experimental Setup}
 
@@ -289,52 +217,25 @@ BillSum & 18K & 2.5K & 2.5K & 7,621 \\
 
 \subsection{Training Configuration}
 
-\textbf{Hardware:} NVIDIA A100 40GB GPU, 32 CPU cores, 128GB RAM.
+\textbf{Hardware:} All experiments run on an NVIDIA A100 40GB GPU with 32 CPU cores and 128GB RAM.
 
-\textbf{Extractive Models:} No training required (unsupervised).
+\textbf{Extractive Models:} No training required as these methods operate unsupervised.
 
-\textbf{BART Baseline:}
-\begin{itemize}
-    \item Batch size: 4 (gradient accumulation: 4)
-    \item Learning rate: $3 \times 10^{-5}$ (AdamW)
-    \item Warmup steps: 500
-    \item Epochs: 3
-    \item Max gradient norm: 1.0
-\end{itemize}
+\textbf{BART Baseline:} We train with batch size 4 and gradient accumulation of 4, learning rate of $3 \times 10^{-5}$ using AdamW optimizer, 500 warmup steps, 3 epochs, and maximum gradient norm of 1.0.
 
-\textbf{Hierarchical Transformer:}
-\begin{itemize}
-    \item Batch size: 2 (gradient accumulation: 8)
-    \item Learning rate: $2 \times 10^{-5}$
-    \item Warmup steps: 1000
-    \item Epochs: 5
-    \item FP16 mixed precision training
-\end{itemize}
+\textbf{Hierarchical Transformer:} Training uses batch size 2 with gradient accumulation of 8, learning rate of $2 \times 10^{-5}$, 1000 warmup steps, 5 epochs, and FP16 mixed precision training.
 
-\textbf{Longformer (LED):}
-\begin{itemize}
-    \item Batch size: 1 (gradient accumulation: 16)
-    \item Learning rate: $3 \times 10^{-5}$
-    \item Warmup steps: 500
-    \item Epochs: 4
-    \item Gradient checkpointing enabled
-    \item FP16 mixed precision
-\end{itemize}
+\textbf{Longformer (LED):} We employ batch size 1 with gradient accumulation of 16, learning rate of $3 \times 10^{-5}$, 500 warmup steps, 4 epochs, gradient checkpointing for memory efficiency, and FP16 mixed precision.
 
 All models use early stopping with patience of 3 epochs on validation ROUGE-L.
 
 \subsection{Evaluation Metrics}
 
-\textbf{ROUGE} \citep{lin2004rouge}: Measures n-gram overlap between generated and reference summaries.
-\begin{itemize}
-    \item ROUGE-1: Unigram overlap
-    \item ROUGE-2: Bigram overlap
-    \item ROUGE-L: Longest common subsequence
-\end{itemize}
+\textbf{ROUGE} \citep{lin2004rouge} measures n-gram overlap between generated and reference summaries, including ROUGE-1 for unigram overlap, ROUGE-2 for bigram overlap, and ROUGE-L for longest common subsequence matching.
 
-\textbf{BERTScore} \citep{zhang2019bertscore}: Computes semantic similarity using contextual embeddings from DeBERTa-xlarge-mnli. More robust to paraphrasing than ROUGE.
+\textbf{BERTScore} \citep{zhang2019bertscore} computes semantic similarity using contextual embeddings from DeBERTa-xlarge-mnli and is more robust to paraphrasing than ROUGE.
 
-\textbf{Faithfulness}: We use NLI-based entailment checking. Each sentence in the summary is checked for entailment by the source document:
+\textbf{Faithfulness} employs NLI-based entailment checking where each sentence in the summary is verified for entailment by the source document:
 
 \begin{equation}
 Faithfulness = \frac{1}{|S|} \sum_{s \in S} \mathbb{1}[\text{NLI}(D, s) = \text{entailment}]
@@ -472,44 +373,80 @@ Extractive methods primarily fail by missing key information or producing overly
 
 All models are implemented in PyTorch 2.0 using HuggingFace Transformers 4.30. Key design decisions:
 
-\textbf{Modular Design:} Each model follows a common interface:
-\begin{verbatim}
-class Summarizer:
-    def summarize(self, text: str) -> str
-\end{verbatim}
+\textbf{Modular Design:} Each model follows a common interface with a unified \texttt{summarize(text: str) -> str} method, enabling seamless model swapping and comparison.
 
-\textbf{Memory Optimization:} For Longformer, we employ:
-\begin{itemize}
-    \item Gradient checkpointing (saves 40\% memory)
-    \item FP16 mixed precision (2x speedup)
-    \item Batch size 1 with gradient accumulation
-\end{itemize}
+\textbf{Memory Optimization:} For Longformer, we employ gradient checkpointing to save 40\% memory, FP16 mixed precision for 2x speedup, and batch size 1 with gradient accumulation to fit within GPU memory constraints.
 
-\textbf{Reproducibility:} Fixed random seeds (42), deterministic operations, versioned dependencies.
+\textbf{Reproducibility:} We ensure reproducibility through fixed random seeds (42), deterministic operations, and versioned dependencies.
 
 \subsection{Demonstration System}
 
-We developed an interactive Streamlit application featuring:
-\begin{itemize}
-    \item Multi-model selection with real-time switching
-    \item Text input or PDF upload
-    \item Live metric computation (ROUGE, BERTScore, faithfulness)
-    \item Attention weight visualization for Longformer
-    \item Source text highlighting showing sentence importance
-    \item Compression ratio and processing time display
-\end{itemize}
+We developed an interactive Streamlit application featuring multi-model selection with real-time switching, text input or PDF upload capabilities, live metric computation including ROUGE, BERTScore, and faithfulness scores, attention weight visualization for Longformer, source text highlighting showing sentence importance, and compression ratio and processing time display. The demo is containerized with Docker for easy deployment.
 
-The demo is containerized with Docker for easy deployment.
+\subsection{Production Infrastructure}
+
+\subsubsection{CI/CD Pipeline}
+
+We implement a comprehensive continuous integration and deployment pipeline using GitHub Actions (latex:paper.tex:469). The pipeline executes on every push and pull request to main/develop branches, with support for manual triggering via workflow\_dispatch.
+
+The CI/CD workflow includes three stages. Code quality is enforced through Black for consistent PEP 8 formatting, Flake8 for linting with maximum line length of 100 characters, and Mypy for static type checking with missing import tolerance. Tests run in parallel across Python versions 3.9, 3.10, and 3.11 to ensure compatibility, leveraging pip caching to reduce build times while installing all dependencies including spaCy models and NLTK data. On successful merge to main, a Docker image is automatically built and smoke-tested to verify PyTorch and Transformers imports. Code coverage reports are uploaded to Codecov for Python 3.10, tracking test coverage across commits, and the pipeline validates project structure to ensure all critical directories and files exist.
+
+\subsubsection{Build System and Automation}
+
+A comprehensive Makefile provides standardized commands for all project operations (latex:paper.tex:469). Key targets include:
+
+\textbf{Environment Setup:}
+\begin{verbatim}
+make install     # Create venv, install dependencies
+make setup       # Full project setup + data download
+\end{verbatim}
+
+The install target creates a Python virtual environment, upgrades pip, enforces NumPy version constraints (numpy<2 for compatibility), and downloads required language models (spaCy en\_core\_web\_sm, NLTK punkt/stopwords).
+
+\textbf{Development Workflow:}
+\begin{verbatim}
+make lint        # Run black, flake8, mypy
+make format      # Auto-format with isort and black
+make test        # Run pytest with coverage
+\end{verbatim}
+
+Testing uses pytest with verbose output, HTML coverage reports, and covers both src/ and models/ directories. The test suite achieves 80\%+ code coverage.
+
+\textbf{Training Pipeline:}
+\begin{verbatim}
+make train-baseline    # Train BART baseline
+make train-all         # Train all models
+make evaluate          # Run evaluation suite
+\end{verbatim}
+
+Training commands use YAML configuration files (configs/baseline.yaml, configs/hierarchical.yaml, configs/longformer.yaml) for reproducible experiments. The PYTHONPATH is automatically set to the project root.
+
+\textbf{Deployment:}
+\begin{verbatim}
+make demo           # Launch Streamlit app
+make docker-build   # Build container
+make docker-run     # Run containerized app
+\end{verbatim}
+
+\subsubsection{Data Pipeline}
+
+The data acquisition and preprocessing pipeline consists of two stages implemented in data/scripts/:
+
+\textbf{Download Stage (download\_datasets.py):} Downloads datasets from HuggingFace Hub using the datasets library, supporting sampling for rapid prototyping (default: 1000 samples per dataset) or full downloads. The pipeline implements parallel downloads with progress bars via tqdm, automatic column detection across standard naming conventions (article/text/document/source), statistical analysis including sample count and length distributions, and robust error handling with dataset-level exception management. Currently configured datasets include arXiv (ccdv/arxiv-summarization) and BillSum (billsum), with support for PubMed, BookSum, Multi-News, and CNN/DailyMail available through configuration.
+
+\textbf{Preprocessing Stage (preprocess.py):} Applies filtering, structural analysis, and train/val/test splitting through a multi-step pipeline. Documents are first filtered to 5,000-15,000 tokens to focus on long-document scenarios while maintaining computational feasibility. Each document is then augmented with structural information including paragraph segmentation via double newline splitting, sentence tokenization using NLTK, and token count statistics. The dataset is split into 80\% training, 10\% validation, and 10\% test sets using a fixed random seed (42) for reproducibility. Finally, per-dataset statistics including average token count, paragraph count, and sentence count are computed and saved to JSON. The preprocessing pipeline handles dataset-specific column naming (e.g., "article" for arXiv/PubMed, "text" for BillSum, "chapter" for BookSum) through a mapping dictionary.
+
+\subsubsection{Testing Infrastructure}
+
+Comprehensive testing using pytest ensures correctness and prevents regressions. Unit tests in tests/test\_models.py validate initialization and parameter setting, summary generation on sample text, edge case handling for empty text and short documents, and GPU availability checking using pytest.mark.skipif decorators. Test classes cover TextRankSummarizer, LexRankSummarizer, BARTChunkSummarizer, and utility functions including compression ratio calculation, parameter counting, and device selection. Evaluation tests in tests/test\_evaluation.py validate metric computation for ROUGE, BERTScore, and faithfulness checking. Coverage analysis generates both HTML and terminal reports using --cov=src --cov=models flags, with current coverage exceeding 80\% across core modules.
+
+\subsubsection{Containerization}
+
+Docker enables reproducible deployment across environments. The Dockerfile builds from python:3.10-slim and implements multi-stage optimization through strategic layer caching: requirements are copied before source code for better caching, system dependencies (build-essential, git, curl) are installed in a single layer, apt cache is cleaned to reduce image size, and pip uses --no-cache-dir for minimal footprint. Runtime configuration sets the working directory to /app, exposes port 8501 for Streamlit, configures environment variables (PYTHONUNBUFFERED=1, STREAMLIT\_SERVER\_PORT=8501), and implements health checks at 30-second intervals against the /\_stcore/health endpoint. During image build, the container automatically downloads spaCy (en\_core\_web\_sm) and NLTK data (punkt, stopwords) while creating necessary directories (data/raw, data/processed, logs, models/checkpoints). The container runs the Streamlit application on 0.0.0.0:8501, accessible via port mapping: docker run -p 8501:8501 long-doc-summarization:latest.
 
 \subsection{Testing and Quality Assurance}
 
-Comprehensive test suite with 80\%+ code coverage:
-\begin{itemize}
-    \item Unit tests for each model component
-    \item Integration tests for end-to-end pipelines
-    \item Regression tests on benchmark datasets
-    \item CI/CD pipeline with GitHub Actions
-\end{itemize}
+The project implements multiple layers of quality assurance including unit tests achieving 80\%+ code coverage across model components and utilities, integration tests providing end-to-end pipeline validation from input to summary generation, regression tests evaluating benchmark datasets to detect performance degradation, CI/CD enforcement requiring all tests to pass before merge with multi-version compatibility verification, and code quality controls through automated formatting (Black, isort), linting (Flake8), and type checking (Mypy).
 
 \section{Discussion}
 
@@ -527,13 +464,7 @@ The choice of architecture involves multiple trade-offs:
 
 \subsection{Practical Considerations}
 
-For production deployment:
-\begin{itemize}
-    \item Real-time applications: TextRank/LexRank
-    \item Batch processing with quality focus: Longformer
-    \item Balanced quality and speed: Hierarchical transformer
-    \item Limited compute resources: BART with chunking
-\end{itemize}
+For production deployment, we recommend TextRank or LexRank for real-time applications requiring immediate response, Longformer for batch processing scenarios where quality is paramount, hierarchical transformers when balancing quality and speed, and BART with chunking for environments with limited compute resources.
 
 \subsection{Limitations}
 
