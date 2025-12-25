@@ -239,6 +239,145 @@ class CoverageEvaluator:
         }
 
 
+class SectionCoverageEvaluator:
+    """Evaluator to check if summary covers all important document sections."""
+
+    def __init__(self):
+        """Initialize section coverage evaluator."""
+        pass
+
+    def detect_sections(self, text: str) -> List[str]:
+        """Detect section titles in document.
+
+        Args:
+            text: Document text
+
+        Returns:
+            List of section titles
+        """
+        import re
+
+        sections = []
+        lines = text.split('\n')
+
+        patterns = [
+            r'^#{1,6}\s+(.+)$',  # Markdown
+            r'^([A-Z][A-Z\s]{2,}):?\s*$',  # CAPS
+            r'^(\d+\.?\s+[A-Z][^.!?]*?)$',  # Numbered
+            r'^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*):?\s*$',  # Title Case
+        ]
+
+        for line in lines:
+            line_stripped = line.strip()
+            for pattern in patterns:
+                match = re.match(pattern, line_stripped)
+                if match:
+                    title = match.group(1).strip()
+                    title = re.sub(r'^#+\s*', '', title)
+                    title = re.sub(r'^\d+\.?\s*', '', title)
+                    sections.append(title.lower())
+                    break
+
+        return sections
+
+    def get_important_sections(self, sections: List[str]) -> List[str]:
+        """Filter for important sections only.
+
+        Args:
+            sections: All detected sections
+
+        Returns:
+            List of important section titles
+        """
+        important_keywords = [
+            'abstract', 'introduction', 'conclusion', 'summary',
+            'results', 'findings', 'discussion', 'methods',
+            'methodology', 'background', 'analysis'
+        ]
+
+        important = []
+        for section in sections:
+            section_lower = section.lower()
+            for keyword in important_keywords:
+                if keyword in section_lower:
+                    important.append(section)
+                    break
+
+        return important
+
+    def evaluate_pair(self, source: str, summary: str) -> Dict:
+        """Evaluate section coverage for a single pair.
+
+        Args:
+            source: Source document
+            summary: Generated summary
+
+        Returns:
+            Dictionary with coverage metrics
+        """
+        # Detect sections in source
+        source_sections = self.detect_sections(source)
+        important_sections = self.get_important_sections(source_sections)
+
+        if not important_sections:
+            return {
+                'num_source_sections': len(source_sections),
+                'num_important_sections': 0,
+                'sections_covered': 0,
+                'coverage_ratio': 1.0  # No important sections to cover
+            }
+
+        # Check which sections are mentioned in summary
+        summary_lower = summary.lower()
+        covered = 0
+
+        for section in important_sections:
+            # Check if section content or keywords appear in summary
+            section_words = set(section.split())
+            if any(word in summary_lower for word in section_words):
+                covered += 1
+
+        coverage_ratio = covered / len(important_sections) if important_sections else 0
+
+        return {
+            'num_source_sections': len(source_sections),
+            'num_important_sections': len(important_sections),
+            'sections_covered': covered,
+            'coverage_ratio': coverage_ratio
+        }
+
+    def evaluate(
+        self, predictions: List[str], sources: List[str]
+    ) -> Dict:
+        """Evaluate section coverage for multiple summaries.
+
+        Args:
+            predictions: Generated summaries
+            sources: Source documents
+
+        Returns:
+            Dictionary with section coverage metrics
+        """
+        results = []
+
+        for pred, source in zip(predictions, sources):
+            result = self.evaluate_pair(source, pred)
+            results.append(result)
+
+        # Aggregate
+        coverage_ratios = [r['coverage_ratio'] for r in results]
+        sections_covered = [r['sections_covered'] for r in results]
+
+        return {
+            'section_coverage_mean': np.mean(coverage_ratios),
+            'section_coverage_std': np.std(coverage_ratios),
+            'avg_sections_covered': np.mean(sections_covered),
+            'total_documents_with_sections': sum(
+                1 for r in results if r['num_important_sections'] > 0
+            )
+        }
+
+
 class RedundancyEvaluator:
     """Redundancy evaluator to detect repeated content."""
 
@@ -328,6 +467,8 @@ class ComprehensiveEvaluator:
             self.evaluators["coverage"] = CoverageEvaluator()
         if "redundancy" in metrics:
             self.evaluators["redundancy"] = RedundancyEvaluator()
+        if "section_coverage" in metrics:
+            self.evaluators["section_coverage"] = SectionCoverageEvaluator()
 
     def evaluate(
         self,
@@ -375,6 +516,13 @@ class ComprehensiveEvaluator:
             print("Computing redundancy scores...")
             red_scores = self.evaluators["redundancy"].evaluate(predictions)
             results.update(red_scores)
+
+        if "section_coverage" in self.evaluators and sources:
+            print("Computing section coverage scores...")
+            section_scores = self.evaluators["section_coverage"].evaluate(
+                predictions, sources
+            )
+            results.update(section_scores)
 
         # Add timing and metadata
         results["num_samples"] = len(predictions)
