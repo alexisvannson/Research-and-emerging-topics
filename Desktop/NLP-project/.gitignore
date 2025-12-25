@@ -94,3 +94,5 @@ tmp/
 temp/
 *.tmp
 .cache/
+.mypy_cache/
+
